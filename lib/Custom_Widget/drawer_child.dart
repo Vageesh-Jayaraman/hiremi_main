@@ -1,6 +1,10 @@
+
 import 'package:flutter/material.dart';
+import 'package:hiremi_version_two/Create_new_password.dart';
 import 'package:hiremi_version_two/Edit_Profile_Section/BasicDetails/AddBasicDetails.dart';
+import 'package:hiremi_version_two/Forget_Your_Password.dart';
 import 'package:hiremi_version_two/Help_Support.dart';
+import 'package:hiremi_version_two/Settings.dart';
 import 'package:hiremi_version_two/about_us.dart';
 
 import 'package:percent_indicator/circular_percent_indicator.dart';
@@ -139,7 +143,12 @@ class DrawerChild extends StatelessWidget {
                     size: 20, // Reduced icon size
                   ),
                   iconSize: 10, // Reduced icon size
-                  onPressed: () {},
+                  onPressed: () {
+                    Navigator.push(
+                      context,
+                      MaterialPageRoute(builder: (context) => SettingsScreen()),
+                    );
+                  },
                 )
 
                 ,
@@ -172,7 +181,24 @@ class DrawerChild extends StatelessWidget {
                     size: 20, // Reduced icon size
                   ),
                   iconSize: 10, // Reduced icon size
-                  onPressed: () {},
+                  onPressed: () {
+                    Navigator.push(
+                      context,
+                      MaterialPageRoute(
+                        builder: (context) => Scaffold(
+                          appBar: AppBar(
+                            backgroundColor: Colors.white,
+                            title: const Text(
+                              "Change Password",
+                              style: TextStyle(fontWeight: FontWeight.bold),
+                            ),
+                          ),
+                          body: Forget_Your_Password(),
+                        ),
+                      ),
+                    );
+
+                  },
                 )
               ),
               SizedBox(height: screenHeight * 0.005),
@@ -203,7 +229,11 @@ class DrawerChild extends StatelessWidget {
                     size: 20, // Reduced icon size
                   ),
                   iconSize: 10, // Reduced icon size
-                  onPressed: () {},
+                  onPressed: () {
+                    Navigator.push(
+                    context,
+                    MaterialPageRoute(builder: (context) => About_Us()),
+                  );},
                 )
               ),
               SizedBox(
@@ -236,7 +266,12 @@ class DrawerChild extends StatelessWidget {
                     size: 20, // Reduced icon size
                   ),
                   iconSize: 10, // Reduced icon size
-                  onPressed: () {},
+                  onPressed: () {
+                    Navigator.push(
+                      context,
+                      MaterialPageRoute(builder: (context) => HelpSupport()),
+                    );
+                  },
                 )
               ),
             ],

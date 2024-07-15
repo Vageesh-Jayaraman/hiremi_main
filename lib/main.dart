@@ -1,14 +1,17 @@
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
+import 'package:hiremi_version_two/Custom_Widget/Verifiedtrue.dart';
+import 'package:hiremi_version_two/Custom_Widget/verification_status.dart';
 import 'package:hiremi_version_two/Fresher_Jobs/initialFresherJobs.dart';
 import 'package:hiremi_version_two/Help_Support.dart';
 import 'package:hiremi_version_two/Settings.dart';
+import 'package:hiremi_version_two/verify.dart';
 import 'SplashScreen.dart';
 
 
 void main() {
   runApp(MaterialApp(
-    home: MyApp(),
+    home: MyApp()
   ));
 }
 
@@ -34,50 +37,6 @@ class MyApp extends StatelessWidget {
 
       home: SplashScreen()
       
-    );
-  }
-}
-
-class MyHomePage extends StatefulWidget {
-  const MyHomePage({Key? key, required this.title}) : super(key: key);
-
-  final String title;
-
-  @override
-  _MyHomePageState createState() => _MyHomePageState();
-}
-
-class _MyHomePageState extends State<MyHomePage> {
-  int _counter = 0;
-
-  void _incrementCounter() {
-    setState(() {
-      _counter++;
-    });
-  }
-
-  @override
-  Widget build(BuildContext context) {
-    return Scaffold(
-      appBar: AppBar(
-        title: Text(widget.title),
-      ),
-      body: const Center(
-        child: Column(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: <Widget>[
-            Text(
-              'You have pushed the button this many times:',
-            ),
-
-          ],
-        ),
-      ),
-      floatingActionButton: FloatingActionButton(
-        onPressed: _incrementCounter,
-        tooltip: 'Increment',
-        child: const Icon(Icons.add),
-      ),
     );
   }
 }
