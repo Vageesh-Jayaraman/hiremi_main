@@ -1,13 +1,11 @@
+import 'dart:convert';
 import 'package:flutter/material.dart';
-import 'package:hiremi_version_two/Apis/api.dart';
-import 'package:hiremi_version_two/Controller/Register_controller.dart';
-import 'package:hiremi_version_two/Custom_Widget/Curved_Container.dart';
-import 'package:hiremi_version_two/Custom_Widget/Elevated_Button.dart';
-import 'package:hiremi_version_two/Custom_Widget/SliderPageRoute.dart';
-import 'package:hiremi_version_two/Login.dart';
-import 'package:hiremi_version_two/Models/register_model.dart';
-import 'package:hiremi_version_two/api_services/user_services.dart';
+import 'package:hiremi_version_two/HomePage.dart';
+import 'package:hiremi_version_two/SplashScreen.dart';
 import 'package:intl/intl.dart';
+import 'package:shared_preferences/shared_preferences.dart';
+
+import 'API_Integration/Register/apiServices.dart';
 
 class Registers extends StatefulWidget {
   const Registers({Key? key}) : super(key: key);
@@ -18,11 +16,8 @@ class Registers extends StatefulWidget {
 
 class _RegistersState extends State<Registers> {
   final _formKey = GlobalKey<FormState>();
-  Gender? _selectedGender=Gender.Male;
-  String? _selectedState;
+  Gender? _selectedGender = Gender.Male;
   DateTime? _selectedDate;
-
-  List<String> _states = ['State 1', 'State 2', 'State 3', 'State 4'];
 
   final TextEditingController _fullNameController = TextEditingController();
   final TextEditingController _fatherNameController = TextEditingController();
@@ -39,7 +34,7 @@ class _RegistersState extends State<Registers> {
   final TextEditingController _passwordController = TextEditingController();
   final TextEditingController _confirmPasswordController = TextEditingController();
 
-  RegistrationController _registrationController = RegistrationController();
+  RegisterService _apiService = RegisterService();
 
   void _handleGenderChange(Gender? value) {
     setState(() {
@@ -49,7 +44,6 @@ class _RegistersState extends State<Registers> {
 
   @override
   void dispose() {
-    // Dispose controllers to free up resources
     _fullNameController.dispose();
     _fatherNameController.dispose();
     _emailController.dispose();
@@ -58,6 +52,7 @@ class _RegistersState extends State<Registers> {
     _phoneController.dispose();
     _whatsappController.dispose();
     _collegeNameController.dispose();
+    _collegeStateController.dispose();
     _branchController.dispose();
     _degreeController.dispose();
     _passingYearController.dispose();
@@ -66,9 +61,43 @@ class _RegistersState extends State<Registers> {
     super.dispose();
   }
 
+  Future<void> _registerUser() async {
+    if (_formKey.currentState!.validate()) {
+      String genderValue = _selectedGender.toString().split('.').last;
+      var user = {
+        "full_name": _fullNameController.text,
+        "father_name": _fatherNameController.text,
+        "email": _emailController.text,
+        "date_of_birth": _dobController.text,
+        "birth_place": _birthPlaceController.text,
+        "phone_number": _phoneController.text,
+        "whatsapp_number": _whatsappController.text,
+        "college_name": _collegeNameController.text,
+        "college_state": _collegeStateController.text,
+        "branch_name": _branchController.text,
+        "degree_name": _degreeController.text,
+        "passing_year": _passingYearController.text,
+        "password": _passwordController.text,
+        "gender": genderValue,
+      };
+      var profileId = await _apiService.registerUser(user);
+      if (profileId != null) {
+        SharedPreferences prefs = await SharedPreferences.getInstance();
+        await prefs.setString('profileId', profileId);
+        print('Profile ID stored: $profileId');
+        Navigator.pushReplacement(
+          context,
+          MaterialPageRoute(builder: (context) => SplashScreen()),
+        );
+
+      } else {
+        print('Registration failed');
+      }
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
-    print("Hello");
     double imageSize = MediaQuery.of(context).size.width * 0.6;
     double imageHeight = MediaQuery.of(context).size.height * 0.157;
 
@@ -109,10 +138,14 @@ class _RegistersState extends State<Registers> {
               ),
             ),
             SizedBox(height: MediaQuery.of(context).size.height * 0.0425),
-            CurvedContainer(
-              backgroundColor: Colors.white,
-              borderColor: Colors.black,
-              borderWidth: 0.53,
+            Container(
+              margin: EdgeInsets.all(16.0),
+              padding: EdgeInsets.all(16.0),
+              decoration: BoxDecoration(
+                color: Colors.white,
+                border: Border.all(color: Colors.black, width: 0.53),
+                borderRadius: BorderRadius.circular(12.0),
+              ),
               child: Form(
                 key: _formKey,
                 child: Column(
@@ -162,9 +195,7 @@ class _RegistersState extends State<Registers> {
                     buildLabeledTextField(
                       context,
                       "Date Of Birth",
-                      "DD/MM/YYYY",
-                      showPositionedBox: true,
-                      prefixIcon: Icons.calendar_today,
+                      "YYYY-MM-DD",
                       controller: _dobController,
                       validator: (value) {
                         if (_selectedDate == null) {
@@ -182,7 +213,7 @@ class _RegistersState extends State<Registers> {
                         if (pickedDate != null) {
                           setState(() {
                             _selectedDate = pickedDate;
-                            _dobController.text =DateFormat('yyyy-MM-dd').format(pickedDate);
+                            _dobController.text = DateFormat('yyyy-MM-dd').format(pickedDate);
                           });
                         }
                       },
@@ -190,7 +221,7 @@ class _RegistersState extends State<Registers> {
                     buildLabeledTextField(
                       context,
                       "Birth Place",
-                      "Select State",
+                      "Enter Birth Place",
                       controller: _birthPlaceController,
                       validator: (value) {
                         if (value == null || value.isEmpty) {
@@ -236,7 +267,7 @@ class _RegistersState extends State<Registers> {
                     buildLabeledTextField(
                       context,
                       "College Name",
-                      "Enter Your College Name",
+                      "Enter College Name",
                       controller: _collegeNameController,
                       validator: (value) {
                         if (value == null || value.isEmpty) {
@@ -245,16 +276,14 @@ class _RegistersState extends State<Registers> {
                         return null;
                       },
                     ),
-                    //buildStateDropdown(),
                     buildLabeledTextField(
                       context,
-                      "College's State",
-                      "Enter Your College's State",
+                      "College State",
+                      "Enter College State",
                       controller: _collegeStateController,
-                      dropdownItems: ['Degree 1', 'Degree 2', 'Degree 3'],
                       validator: (value) {
                         if (value == null || value.isEmpty) {
-                          return "Please enter your College's State";
+                          return 'Please enter your college state';
                         }
                         return null;
                       },
@@ -262,9 +291,8 @@ class _RegistersState extends State<Registers> {
                     buildLabeledTextField(
                       context,
                       "Branch",
-                      "Enter Your Branch Name",
+                      "Enter Branch",
                       controller: _branchController,
-                      dropdownItems: ['Degree 1', 'Degree 2', 'Degree 3'],
                       validator: (value) {
                         if (value == null || value.isEmpty) {
                           return 'Please enter your branch';
@@ -275,9 +303,8 @@ class _RegistersState extends State<Registers> {
                     buildLabeledTextField(
                       context,
                       "Degree",
-                      "Enter Your Degree Name",
+                      "Enter Degree",
                       controller: _degreeController,
-                      dropdownItems: ['Degree 1', 'Degree 2', 'Degree 3'],
                       validator: (value) {
                         if (value == null || value.isEmpty) {
                           return 'Please enter your degree';
@@ -288,10 +315,9 @@ class _RegistersState extends State<Registers> {
                     buildLabeledTextField(
                       context,
                       "Passing Year",
-                      "Enter Your Passing Year",
+                      "Enter Passing Year",
+                      keyboardType: TextInputType.number,
                       controller: _passingYearController,
-
-                      dropdownItems: ['2012', '2024', '2025'],
                       validator: (value) {
                         if (value == null || value.isEmpty) {
                           return 'Please enter your passing year';
@@ -299,20 +325,18 @@ class _RegistersState extends State<Registers> {
                         return null;
                       },
                     ),
-                    buildSectionHeader("Let's Create Password"),
-
                     buildLabeledTextField(
                       context,
                       "Password",
-                      "Enter Your Password",
+                      "Enter Password",
                       obscureText: true,
                       controller: _passwordController,
                       validator: (value) {
                         if (value == null || value.isEmpty) {
                           return 'Please enter your password';
                         }
-                        if (value.length < 8) {
-                          return 'Password must be at least 8 characters long';
+                        if (value.length < 6) {
+                          return 'Password must be at least 6 characters long';
                         }
                         return null;
                       },
@@ -320,12 +344,12 @@ class _RegistersState extends State<Registers> {
                     buildLabeledTextField(
                       context,
                       "Confirm Password",
-                      "Enter Your Password",
+                      "Enter Confirm Password",
                       obscureText: true,
                       controller: _confirmPasswordController,
                       validator: (value) {
                         if (value == null || value.isEmpty) {
-                          return 'Please enter your password';
+                          return 'Please confirm your password';
                         }
                         if (value != _passwordController.text) {
                           return 'Passwords do not match';
@@ -333,58 +357,33 @@ class _RegistersState extends State<Registers> {
                         return null;
                       },
                     ),
-                    SizedBox(height: MediaQuery.of(context).size.height * 0.02),
-                    CustomElevatedButton(
-                      width: MediaQuery.of(context).size.width * 0.775,
-                      height: MediaQuery.of(context).size.height * 0.0625,
-                      text: 'Register Now',
-                      onPressed: () async {
-                        if (_formKey.currentState!.validate()) {
-                          User newUser = User(
-                            fullName: _fullNameController.text,
-                            fatherName: _fatherNameController.text,
-                            gender: _selectedGender ?? Gender.Other,
-                            email: _emailController.text,
-                            dob: _dobController.text,
-                            birthPlace: _birthPlaceController.text,
-                            phone: _phoneController.text,
-                            whatsapp: _whatsappController.text,
-                            collegeName: _collegeNameController.text,
-                            collegeState: _selectedState ?? _states.first,
-                            branch: _branchController.text,
-                            degree: _degreeController.text,
-                            passingYear: _passingYearController.text,
-                            password: _passwordController.text,
-                          );
-
-                          bool registrationSuccess = await _registrationController.registerUser(newUser);
-
-
-                          if (registrationSuccess) {
-                            // Registration successful, navigate to login or next screen
-                            Navigator.pushReplacement(
-                              context,
-                              SlidePageRoute(page: LogIn()),
-                            );
-                          }
-                          else {
-                            // Show error message to user
-                            ScaffoldMessenger.of(context).showSnackBar(
-                              SnackBar(
-                                content: Text('Registration failed. Please try again.'),
-                                duration: Duration(seconds: 3),
-                              ),
-                            );
-                          }
-                        }
-                      },
+                    SizedBox(height: MediaQuery.of(context).size.height * 0.050),
+                    SizedBox(
+                      width: double.infinity,
+                      child: ElevatedButton(
+                        onPressed: _registerUser,
+                        style: ElevatedButton.styleFrom(
+                          foregroundColor: Colors.white,
+                          backgroundColor: Colors.blue,
+                          padding: EdgeInsets.symmetric(vertical: 16.0),
+                          shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(8.0),
+                          ),
+                        ),
+                        child: Text(
+                          'Register',
+                          style: TextStyle(
+                            fontSize: 18.0,
+                            fontWeight: FontWeight.w600,
+                          ),
+                        ),
+                      ),
                     ),
-                    SizedBox(height: MediaQuery.of(context).size.height * 0.025),
+                    SizedBox(height: MediaQuery.of(context).size.height * 0.05),
                   ],
                 ),
               ),
             ),
-
           ],
         ),
       ),
@@ -392,250 +391,104 @@ class _RegistersState extends State<Registers> {
   }
 
   Widget buildSectionHeader(String title) {
-    return Padding(
-      padding: EdgeInsets.symmetric(vertical: MediaQuery.of(context).size.height * 0.02),
+    return Container(
+      padding: EdgeInsets.symmetric(vertical: 8.0),
+      width: double.infinity,
+      decoration: BoxDecoration(
+        border: Border(
+          bottom: BorderSide(
+            color: Colors.black,
+            width: 1.0,
+          ),
+        ),
+      ),
       child: Text(
         title,
         style: TextStyle(
-          fontSize: 20,
+          fontSize: 20.0,
           fontWeight: FontWeight.bold,
-          color: Colors.black,
         ),
       ),
     );
   }
 
-
-
-  // Widget buildLabeledTextField(
-  //     BuildContext context,
-  //     String label,
-  //     String hintText, {
-  //       bool showPositionedBox = false,
-  //       IconData? prefixIcon,
-  //       bool obscureText = false,
-  //       List<String>? dropdownItems,
-  //       TextEditingController? controller,
-  //       String? Function(String?)? validator,
-  //       VoidCallback? onTap,
-  //       TextInputType? keyboardType,
-  //     }) {
-  //   return Column(
-  //     crossAxisAlignment: CrossAxisAlignment.start,
-  //     children: [
-  //       Padding(
-  //         padding: EdgeInsets.symmetric(horizontal: MediaQuery.of(context).size.width * 0.1),
-  //         child: RichText(
-  //           text: TextSpan(
-  //             children: [
-  //               TextSpan(
-  //                 text: label,
-  //                 style: TextStyle(color: Colors.black),
-  //               ),
-  //               TextSpan(
-  //                 text: " *",
-  //                 style: TextStyle(color: Colors.red),
-  //               ),
-  //             ],
-  //           ),
-  //         ),
-  //       ),
-  //       SizedBox(height: MediaQuery.of(context).size.height * 0.0185),
-  //       Padding(
-  //         padding: EdgeInsets.symmetric(horizontal: MediaQuery.of(context).size.width * 0.1),
-  //         child: dropdownItems != null
-  //             ? DropdownButtonFormField<String>(
-  //           decoration: InputDecoration(
-  //             hintText: hintText,
-  //             prefixIcon: prefixIcon != null ? Icon(prefixIcon) : null,
-  //             border: OutlineInputBorder(
-  //               borderRadius: BorderRadius.circular(10),
-  //             ),
-  //           ),
-  //           value: controller?.text.isNotEmpty == true ? controller?.text : null,
-  //           hint: Text(hintText),
-  //           onChanged: (String? newValue) {
-  //             setState(() {
-  //               controller?.text = newValue!;
-  //             });
-  //           },
-  //           items: dropdownItems.map((String item) {
-  //             return DropdownMenuItem<String>(
-  //               value: item,
-  //               child: Text(item),
-  //             );
-  //           }).toList(),
-  //           validator: validator,
-  //         )
-  //             : TextFormField(
-  //           controller: controller,
-  //           decoration: InputDecoration(
-  //             hintText: hintText,
-  //             prefixIcon: prefixIcon != null ? Icon(prefixIcon) : null,
-  //             border: OutlineInputBorder(
-  //               borderRadius: BorderRadius.circular(10),
-  //             ),
-  //           ),
-  //           obscureText: obscureText,
-  //           validator: validator,
-  //           onTap: onTap,
-  //           keyboardType: keyboardType,
-  //         ),
-  //       ),
-  //       SizedBox(height: MediaQuery.of(context).size.height * 0.0185),
-  //     ],
-  //   );
-  // }
   Widget buildLabeledTextField(
       BuildContext context,
       String label,
       String hintText, {
-        bool showPositionedBox = false,
-        IconData? prefixIcon,
+        required TextEditingController controller,
         bool obscureText = false,
-        List<String>? dropdownItems,
-        TextEditingController? controller,
-        String? Function(String?)? validator,
-        VoidCallback? onTap,
-        TextInputType? keyboardType,
+        TextInputType keyboardType = TextInputType.text,
+        required String? Function(String?)? validator,
+        void Function()? onTap,
       }) {
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        Padding(
-          padding: EdgeInsets.symmetric(horizontal: MediaQuery.of(context).size.width * 0.1),
-          child: RichText(
-            text: TextSpan(
-              children: [
-                TextSpan(
-                  text: label,
-                  style: TextStyle(color: Colors.black),
-                ),
-                TextSpan(
-                  text: " *",
-                  style: TextStyle(color: Colors.red),
-                ),
-              ],
+    return Padding(
+      padding: const EdgeInsets.symmetric(vertical: 8.0),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Text(
+            label,
+            style: TextStyle(
+              fontSize: 16.0,
+              fontWeight: FontWeight.w500,
             ),
           ),
-        ),
-        SizedBox(height: MediaQuery.of(context).size.height * 0.0185),
-        Padding(
-          padding: EdgeInsets.symmetric(horizontal: MediaQuery.of(context).size.width * 0.1),
-          child: dropdownItems != null
-              ? DropdownButtonFormField<String>(
-            decoration: InputDecoration(
-              hintText: hintText,
-              prefixIcon: prefixIcon != null ? Icon(prefixIcon) : null,
-              border: OutlineInputBorder(
-                borderRadius: BorderRadius.circular(10),
-              ),
-            ),
-            value: controller?.text.isNotEmpty == true ? controller?.text : null,
-            hint: Text(hintText),
-            onChanged: (String? newValue) {
-              setState(() {
-                controller?.text = newValue!;
-              });
-            },
-            items: dropdownItems.map((String item) {
-              return DropdownMenuItem<String>(
-                value: item,
-                child: Text(item),
-              );
-            }).toList(),
-            validator: validator,
-          )
-              : TextFormField(
+          SizedBox(height: 8.0),
+          TextFormField(
             controller: controller,
-            decoration: InputDecoration(
-              hintText: hintText,
-              prefixIcon: prefixIcon != null ? Icon(prefixIcon) : null,
-              border: OutlineInputBorder(
-                borderRadius: BorderRadius.circular(10),
-              ),
-            ),
             obscureText: obscureText,
+            keyboardType: keyboardType,
             validator: validator,
             onTap: onTap,
-            keyboardType: keyboardType,
+            decoration: InputDecoration(
+              hintText: hintText,
+              border: OutlineInputBorder(
+                borderRadius: BorderRadius.circular(8.0),
+              ),
+            ),
           ),
-        ),
-        SizedBox(height: MediaQuery.of(context).size.height * 0.0185),
-      ],
+        ],
+      ),
     );
   }
-
-
 
   Widget buildGenderField() {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        Padding(
-          padding: EdgeInsets.symmetric(horizontal: MediaQuery.of(context).size.width * 0.12),
-          child: RichText(
-            text: TextSpan(
-              children: [
-                TextSpan(
-                  text: 'Gender',
-                  style: TextStyle(color: Colors.black),
-                ),
-                TextSpan(
-                  text: " *",
-                  style: TextStyle(color: Colors.red),
-                ),
-              ],
+        Text(
+          'Gender',
+          style: TextStyle(
+            fontSize: 16.0,
+            fontWeight: FontWeight.w500,
+          ),
+        ),
+        Row(
+          children: [
+            Radio<Gender>(
+              value: Gender.Male,
+              groupValue: _selectedGender,
+              onChanged: _handleGenderChange,
             ),
-          ),
+            Text('Male'),
+            Radio<Gender>(
+              value: Gender.Female,
+              groupValue: _selectedGender,
+              onChanged: _handleGenderChange,
+            ),
+            Text('Female'),
+            Radio<Gender>(
+              value: Gender.Other,
+              groupValue: _selectedGender,
+              onChanged: _handleGenderChange,
+            ),
+            Text('Other'),
+          ],
         ),
-        Padding(
-          padding: EdgeInsets.only(left: MediaQuery.of(context).size.width * 0.085),
-          child: Row(
-            children: [
-              Radio(
-                value: Gender.Male,
-                groupValue: _selectedGender,
-                onChanged: _handleGenderChange,
-              ),
-              Text('Male'),
-              Radio(
-                value: Gender.Female,
-                groupValue: _selectedGender,
-                onChanged: _handleGenderChange,
-              ),
-              Text('Female'),
-              Radio(
-                value: Gender.Other,
-                groupValue: _selectedGender,
-                onChanged: _handleGenderChange,
-              ),
-              Text('Other'),
-            ],
-          ),
-        ),
-        SizedBox(height: MediaQuery.of(context).size.height * 0.0185),
       ],
     );
   }
-
-
-
-
-  Widget buildStateDropdown() {
-    return Padding(
-      padding: EdgeInsets.symmetric(
-        horizontal: MediaQuery.of(context).size.width * 0.045,
-        vertical: MediaQuery.of(context).size.height * 0.01,
-      ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-
-          SizedBox(height: MediaQuery.of(context).size.height * 0.01),
-
-        ],
-      ),
-    );
-  }
 }
+
+enum Gender { Male, Female, Other }

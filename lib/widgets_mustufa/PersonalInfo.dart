@@ -6,7 +6,7 @@ import 'package:hiremi_version_two/Utils/colors.dart';
 
 
 class PersonalInfo extends StatelessWidget {
-  const PersonalInfo({Key? key, 
+  const PersonalInfo({Key? key,
   }) : super(key: key);
 
   @override
@@ -58,7 +58,7 @@ class PersonalInfo extends StatelessWidget {
 }
 
 class PersonalInfoChild extends StatelessWidget {
-  const PersonalInfoChild({Key? key, 
+  const PersonalInfoChild({Key? key,
     required this.title,
     required this.subtitle,
   }) : super(key: key);
@@ -75,7 +75,7 @@ class PersonalInfoChild extends StatelessWidget {
           height: Sizes.responsiveXs(context),
         ),
         Text(subtitle,
-            style: TextStyle(fontSize: 9.0,fontWeight: FontWeight.w500,color: AppColors.secondaryText),),
+          style: TextStyle(fontSize: 9.0,fontWeight: FontWeight.w500,color: AppColors.secondaryText),),
         SizedBox(
           height: Sizes.responsiveSm(context),
         ),

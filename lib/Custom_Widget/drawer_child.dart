@@ -78,12 +78,12 @@ class DrawerChild extends StatelessWidget {
                     SizedBox(height: screenHeight * 0.005),
                     ElevatedButton(
                       onPressed: () {
-                        Navigator.of(context).push(MaterialPageRoute(builder: (ctx) => const AddBasicDetails()));
+                        Navigator.of(context).push(MaterialPageRoute(builder: (ctx) =>  AddBasicDetails()));
                       },
                       style: ButtonStyle(
-                        padding: MaterialStatePropertyAll(EdgeInsets.all(5)),
+                        padding: WidgetStatePropertyAll(EdgeInsets.all(5)),
                         foregroundColor:
-                        MaterialStateProperty.all<Color>(Colors.white),
+                        WidgetStateProperty.all<Color>(Colors.white),
                         backgroundColor: MaterialStateProperty.all<Color>(
                             const Color(0xFFC1272D)),
                         shape: MaterialStateProperty.all<RoundedRectangleBorder>(

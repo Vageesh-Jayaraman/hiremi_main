@@ -29,7 +29,7 @@ class BasicDetails extends StatelessWidget {
     return OutlinedContainer(
       onTap: () =>
           Navigator.of(context).push(MaterialPageRoute(
-              builder: (context) =>  const AddBasicDetails())),
+              builder: (context) =>   AddBasicDetails())),
       title: 'Basic Details',
       isTrue: isAllFieldValid(),
       child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [

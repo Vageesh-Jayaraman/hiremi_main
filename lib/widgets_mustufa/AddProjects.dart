@@ -4,7 +4,9 @@ import 'package:hiremi_version_two/Profile_Screen.dart';
 import 'package:hiremi_version_two/Utils/AppSizes.dart';
 import 'package:hiremi_version_two/Utils/colors.dart';
 import 'package:hiremi_version_two/widgets_mustufa/TextFieldWithTitle.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 
+import '../API_Integration/Profile/Add Projects/apiServices.dart';
 
 class AddProjects extends StatefulWidget {
   const AddProjects({Key? key, }) : super(key: key);
@@ -21,6 +23,95 @@ class _AddProjectsState extends State<AddProjects> {
   TextEditingController completionDateController = TextEditingController();
   TextEditingController descriptionController = TextEditingController();
   String projectStatus = '';
+  final AddProjectsService _apiService = AddProjectsService();
+
+  Future<void> _saveProject() async {
+    if (titleController.text.isNotEmpty &&
+        clientController.text.isNotEmpty &&
+        projectLinkController.text.isNotEmpty &&
+        startingDateController.text.isNotEmpty &&
+        projectStatus.isNotEmpty &&
+        completionDateController.text.isNotEmpty &&
+        descriptionController.text.isNotEmpty) {
+
+      final SharedPreferences prefs = await SharedPreferences.getInstance();
+      final String? profileId = prefs.getString('profileId');
+      print('Profile ID: $profileId');
+
+      if (profileId == null) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('Profile ID not found')),
+        );
+        return;
+      }
+
+      final details = {
+        "project_name": titleController.text,
+        "description": descriptionController.text,
+        "link": projectLinkController.text,
+        "profile": profileId,
+      };
+      print(details);
+
+      final success = await _apiService.addProject(details);
+
+      if (success) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('Project details added successfully')),
+        );
+        Navigator.of(context).push(MaterialPageRoute(
+            builder: (ctx) => ProfileScreen()));
+      } else {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('Failed to add project details')),
+        );
+      }
+    }
+  }
+
+  Future<void> _saveAndNext() async {
+    if (titleController.text.isNotEmpty &&
+        clientController.text.isNotEmpty &&
+        projectLinkController.text.isNotEmpty &&
+        startingDateController.text.isNotEmpty &&
+        projectStatus.isNotEmpty &&
+        completionDateController.text.isNotEmpty &&
+        descriptionController.text.isNotEmpty) {
+
+      final SharedPreferences prefs = await SharedPreferences.getInstance();
+      final String? profileId = prefs.getString('profileId');
+      print('Profile ID: $profileId');
+
+      if (profileId == null) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('Profile ID not found')),
+        );
+        return;
+      }
+
+      final details = {
+        "project_name": titleController.text,
+        "description": descriptionController.text,
+        "link": projectLinkController.text,
+        "profile": profileId,
+      };
+      print(details);
+
+      final success = await _apiService.addProject(details);
+
+      if (success) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('Project details added successfully')),
+        );
+        Navigator.of(context).push(MaterialPageRoute(
+            builder: (ctx) => AddPersonalDetails()));
+      } else {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('Failed to add project details')),
+        );
+      }
+    }
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -170,11 +261,11 @@ class _AddProjectsState extends State<AddProjects> {
               height: Sizes.responsiveMd(context),
             ),
             TextFieldWithTitle(
-                title: 'Project Description',
-                hintText: 'Tell us about your project...',
-                controller: descriptionController,
-                spaceBtwTextField: Sizes.responsiveMd(context),
-                maxLines: 3,
+              title: 'Project Description',
+              hintText: 'Tell us about your project...',
+              controller: descriptionController,
+              spaceBtwTextField: Sizes.responsiveMd(context),
+              maxLines: 3,
             ),
             SizedBox(
               height: Sizes.responsiveMd(context)*2,
@@ -191,12 +282,7 @@ class _AddProjectsState extends State<AddProjects> {
                           vertical: Sizes.responsiveHorizontalSpace(context),
                           horizontal: Sizes.responsiveMdSm(context)),
                     ),
-                    onPressed: () {
-                      if (titleController.text.isNotEmpty && clientController.text.isNotEmpty && projectLinkController.text.isNotEmpty && startingDateController.text.isNotEmpty && projectStatus.isNotEmpty && completionDateController.text.isNotEmpty && descriptionController.text.isNotEmpty) {
-                        Navigator.of(context).push(MaterialPageRoute(
-                            builder: (ctx) =>  ProfileScreen()));
-                      }
-                    },
+                    onPressed: _saveProject,
                     child: const Text(
                       'Save',
                       style: TextStyle(
@@ -214,12 +300,7 @@ class _AddProjectsState extends State<AddProjects> {
                           vertical: Sizes.responsiveSm(context),
                           horizontal: Sizes.responsiveMdSm(context)),
                     ),
-                    onPressed: () {
-                      if (titleController.text.isNotEmpty && clientController.text.isNotEmpty && projectLinkController.text.isNotEmpty && startingDateController.text.isNotEmpty && projectStatus.isNotEmpty && completionDateController.text.isNotEmpty && descriptionController.text.isNotEmpty) {
-                        Navigator.of(context).push(MaterialPageRoute(
-                            builder: (ctx) =>  const AddPersonalDetails()));
-                      }
-                    },
+                    onPressed: _saveAndNext,
                     child:  Row(
                       mainAxisSize: MainAxisSize.min,
                       children: [
@@ -250,4 +331,3 @@ class _AddProjectsState extends State<AddProjects> {
     );
   }
 }
-

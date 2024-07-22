@@ -37,7 +37,7 @@ class ProfileScreen extends StatelessWidget {
       'course': '12th, Math’s Stream',
       'place': 'Bhopal, Madhya Pradesh',
       'duration': '2021-2020 | Percentage: 84.00%',
-    },
+    }, 
     {
       'course': '10th, All Subjects',
       'place': 'Bhopal, Madhya Pradesh',

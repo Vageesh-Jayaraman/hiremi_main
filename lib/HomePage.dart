@@ -81,7 +81,6 @@ class _HomePageState extends State<HomePage> {
     const percent = 0.8;
     final screenWidth = MediaQuery.of(context).size.width;
     final screenHeight = MediaQuery.of(context).size.height;
-
     return Scaffold(
       backgroundColor: Colors.white,
       drawer: const Drawer(backgroundColor: Colors.white,child: DrawerChild(),),
